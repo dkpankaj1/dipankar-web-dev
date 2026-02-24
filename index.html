@@ -198,12 +198,20 @@
             --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
+        html {
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: var(--dark-bg);
             color: var(--text-light);
             overflow-x: hidden;
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: pan-y;
         }
 
         /* Custom Scrollbar */
@@ -1370,7 +1378,7 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark" role="navigation" aria-label="Main navigation">
         <div class="container">
-            <a class="navbar-brand" href="#home">DKP.</a>
+            <a class="navbar-brand" href="#home">DIPANKAR WEB DEV.</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -1976,26 +1984,6 @@
                     </div>
                 </div>
 
-                <div class="col-lg-4 col-md-6 mb-4">
-                    <div class="project-card">
-                        <div class="project-image">
-                            <i class="fas fa-graduation-cap"></i>
-                        </div>
-                        <div class="project-content">
-                            <h3 class="project-title">Academico</h3>
-                            <div class="project-tech">Laravel | PHP | MySQL</div>
-                            <p class="project-description">
-                                School management platform designed for small and medium institutions.
-                            </p>
-                            <ul class="project-features">
-                                <li>Student and staff management</li>
-                                <li>Attendance tracking</li>
-                                <li>Fee management</li>
-                                <li>Comprehensive reporting</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </section>
@@ -2026,7 +2014,7 @@
                                     <a href="tel:9919823355">+91 991 982 3355</a>
                                 </div>
                             </div>
-                            <div class="contact-item">
+                            <!-- <div class="contact-item">
                                 <div class="contact-icon">
                                     <i class="fas fa-map-marker-alt"></i>
                                 </div>
@@ -2034,7 +2022,7 @@
                                     <h4>Location</h4>
                                     <p style="margin: 0; color: var(--text-light);">Kushinagar, Uttar Pradesh 274149, India</p>
                                 </div>
-                            </div>
+                            </div> -->
                         </div>
                     </div>
                     <div class="col-md-6">
@@ -2094,15 +2082,37 @@
     
     <!-- Custom JS -->
     <script>
-        // Navbar scroll effect
-        window.addEventListener('scroll', function() {
+        // Throttle function for performance
+        function throttle(func, wait) {
+            let timeout;
+            let lastRan;
+            return function executedFunction(...args) {
+                if (!lastRan) {
+                    func.apply(this, args);
+                    lastRan = Date.now();
+                } else {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(function() {
+                        if ((Date.now() - lastRan) >= wait) {
+                            func.apply(this, args);
+                            lastRan = Date.now();
+                        }
+                    }, wait - (Date.now() - lastRan));
+                }
+            };
+        }
+
+        // Navbar scroll effect (throttled)
+        const handleNavbarScroll = throttle(function() {
             const navbar = document.querySelector('.navbar');
             if (window.scrollY > 50) {
                 navbar.classList.add('navbar-scrolled');
             } else {
                 navbar.classList.remove('navbar-scrolled');
             }
-        });
+        }, 100);
+        
+        window.addEventListener('scroll', handleNavbarScroll, { passive: true });
 
         // Smooth scrolling for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -2167,8 +2177,8 @@
             element.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
         });
 
-        // Active navigation highlighting
-        window.addEventListener('scroll', function() {
+        // Active navigation highlighting (throttled)
+        const handleNavHighlight = throttle(function() {
             const sections = document.querySelectorAll('section[id]');
             const scrollPosition = window.scrollY + 150;
 
@@ -2186,7 +2196,9 @@
                     });
                 }
             });
-        });
+        }, 150);
+        
+        window.addEventListener('scroll', handleNavHighlight, { passive: true });
 
         // Counter animation for stats
         function animateCounter(element, target, duration = 2000) {
@@ -2266,14 +2278,27 @@
             skillsProgressObserver.observe(techSkillsSection);
         }
 
-        // Add parallax effect to hero section
-        window.addEventListener('scroll', function() {
+        // Add parallax effect to hero section (throttled with RAF)
+        let ticking = false;
+        const handleParallax = function() {
             const scrolled = window.pageYOffset;
             const heroSection = document.querySelector('.hero-section');
             if (heroSection && scrolled < window.innerHeight) {
-                heroSection.style.transform = `translateY(${scrolled * 0.5}px)`;
+                requestAnimationFrame(function() {
+                    heroSection.style.transform = `translateY(${scrolled * 0.5}px)`;
+                    ticking = false;
+                });
+            } else {
+                ticking = false;
             }
-        });
+        };
+        
+        window.addEventListener('scroll', function() {
+            if (!ticking) {
+                ticking = true;
+                handleParallax();
+            }
+        }, { passive: true });
 
         // Add hover effect sound (visual feedback)
         document.querySelectorAll('.service-card, .project-card, .btn-custom, .social-icon').forEach(element => {
